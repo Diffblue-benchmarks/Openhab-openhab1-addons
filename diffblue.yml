@@ -1,0 +1,284 @@
+buildCmd: mvn -e -X -Dlicense.skip=true -Dmaven.enforcer.skip=true  -Denforcer.skip=true -Dair.check.skip-all=true -Dmaven.test.skip=true compile
+testCmd: true
+skipVerification: true
+# Copyright 2019 Diffblue Limited. All Rights Reserved.
+cbmcArguments:
+  # Do not generate coverage comments on generated tests.
+  java-generate-no-comments: true
+  # Constrain the size of arrays created in the analyzed code.
+  java-max-vla-length: 100000
+phases:
+  -
+    # Phase 0 PRETTY, SIMPLE and SMART - pretty tests, do not test private methods directly, Smart-Harness
+    timeout: 180
+    cbmcArguments:
+      # Use simple models first containers (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # Instrument the file as opposed to the function only
+      cover-only: file
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Instantiate classes using the simplest constructor strategy
+      smart-harness: simplest-constructor-and-nondet
+  -
+    # Phase 1 PRETTY AND COMPLEX - standard models only, pretty tests, do not test private methods directly, input factory
+    timeout: 180
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 2
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+      # Limit input factory recursive depth (default 0 = no recursion allowed)
+      java-test-input-factory-bmc-recursion-limit: 4
+  -
+    # Phase 2 FIFO Strategy - pretty tests, do not test private methods directly, fifo
+    timeout: 100
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Add constraint that strings are printable
+      max-nondet-string-length: 100
+      # Explores the program tree breadth-first.
+      paths: fifo
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: false
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 3 Exceptions - do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 30
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    # Phase 4 Direct testing - test private methods directly, increased reflection
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Set string input value
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # If the logs contain output of the following then proceed to phase X
+    nextPhase:
+      # If the function is not analysable then do not pass onto the next phase
+      not_analyzed: null
+  -
+    # PHASE 5 Mocking - aggressive mocking, do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 3000
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Only load the class (and related inner/outer classes) containing the method under test,
+      load-containing-class-only: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 100
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [private]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+units:
+ - target:
+   - dir: bundles/persistence/org.openhab.persistence.jdbc/target/classes
+     file: org/openhab/persistence/jdbc/utils/StringUtilsExt.class
+     sourceDir: bundles/persistence/org.openhab.persistence.jdbc/java
+     sourceFile: org/openhab/persistence/jdbc/utils/StringUtilsExt.java
+   - dir: bundles/api/org.openhab.core1/target/classes
+     file: org/openhab/core/persistence/FilterCriteria.class
+     sourceDir: bundles/api/org.openhab.core1/src/main/java
+     sourceFile: org/openhab/core/persistence/FilterCriteria.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.ebus/target/classes
+     file: org/openhab/binding/ebus/internal/utils/EBusCodecUtils.class
+     sourceDir: bundles/binding/org.openhab.binding.ebus/src/main/java
+     sourceFile: org/openhab/binding/ebus/internal/utils/EBusCodecUtils.java
+   - dir: bundles/binding/org.openhab.binding.ebus/target/classes
+     file: org/openhab/binding/ebus/internal/utils/NumberUtils.class
+     sourceDir: bundles/binding/org.openhab.binding.ebus/src/main/java
+     sourceFile: org/openhab/binding/ebus/internal/utils/NumberUtils.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.ebus/target/classes
+     file: org/openhab/binding/ebus/internal/utils/EBusUtils.class
+     sourceDir: bundles/binding/org.openhab.binding.ebus/src/main/java
+     sourceFile: org/openhab/binding/ebus/internal/utils/EBusUtils.java
+   - dir: bundles/binding/org.openhab.binding.ebus/target/classes
+     file: org/openhab/binding/ebus/internal/EBusTelegram.class
+     sourceDir: bundles/binding/org.openhab.binding.ebus/src/main/java
+     sourceFile: org/openhab/binding/ebus/internal/EBusTelegram.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.bticino/target/classes
+     file: com/myhome/fcrisciani/connector/MyHomeSocketFactory.class
+     sourceDir: bundles/binding/org.openhab.binding.bticino/src/main/java
+     sourceFile: com/myhome/fcrisciani/connector/MyHomeSocketFactory.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.insteonhub/target/classes
+     file: org/openhab/binding/insteonhub/internal/util/InsteonHubByteUtil.class
+     sourceDir: bundles/binding/org.openhab.binding.insteonhub/src/main/java
+     sourceFile: org/openhab/binding/insteonhub/internal/util/InsteonHubByteUtil.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.velux/target/classes
+     file: org/openhab/binding/velux/bridge/slip/util/Packet.class
+     sourceDir: bundles/binding/org.openhab.binding.velux/src/main/java
+     sourceFile: org/openhab/binding/velux/bridge/slip/util/Packet.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.souliss/target/classes
+     file: org/openhab/binding/souliss/internal/network/udp/HalfFloatUtils.class
+     sourceDir: bundles/binding/org.openhab.binding.souliss/src/main/java
+     sourceFile: org/openhab/binding/souliss/internal/network/udp/HalfFloatUtils.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.bticino/target/classes
+     file: be/devlaminck/openwebnet/OWNUtilities.class
+     sourceDir: bundles/binding/org.openhab.binding.bticino/src/main/java
+     sourceFile: be/devlaminck/openwebnet/OWNUtilities.java
+   - dir: bundles/binding/org.openhab.binding.bticino/target/classes
+     file: be/devlaminck/openwebnet/ProtocolRead.class
+     sourceDir: bundles/binding/org.openhab.binding.bticino/src/main/java
+     sourceFile: be/devlaminck/openwebnet/ProtocolRead.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.sapp/target/classes
+     file: org/openhab/binding/sapp/internal/configs/SappBindingConfigUtils.class
+     sourceDir: bundles/binding/org.openhab.binding.sapp/src/main/java
+     sourceFile: org/openhab/binding/sapp/internal/configs/SappBindingConfigUtils.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.sallegra/target/classes
+     file: org/openhab/binding/sallegra/internal/xml/XmlUtils.class
+     sourceDir: bundles/binding/org.openhab.binding.sallegra/src/main/java
+     sourceFile: org/openhab/binding/sallegra/internal/xml/XmlUtils.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.maxcube/target/classes
+     file: org/openhab/binding/maxcube/internal/Utils.class
+     sourceDir: bundles/binding/org.openhab.binding.maxcube/src/main/java
+     sourceFile: org/openhab/binding/maxcube/internal/Utils.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.swegonventilation/target/classes
+     file: org/openhab/binding/swegonventilation/protocol/SwegonVentilationConnector.class
+     sourceDir: bundles/binding/org.openhab.binding.swegonventilation/src/main/java
+     sourceFile: org/openhab/binding/swegonventilation/protocol/SwegonVentilationConnector.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.ucprelayboard/target/classes
+     file: org/openhab/binding/ucprelayboard/internal/DowCRC.class
+     sourceDir: bundles/binding/org.openhab.binding.ucprelayboard/src/main/java
+     sourceFile: org/openhab/binding/ucprelayboard/internal/DowCRC.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.dmx/target/classes
+     file: org/openhab/binding/dmx/internal/core/DmxUtil.class
+     sourceDir: bundles/binding/org.openhab.binding.dmx/src/main/java
+     sourceFile: org/openhab/binding/dmx/internal/core/DmxUtil.java
+   - dir: bundles/api/org.openhab.core1/target/classes
+     file: org/openhab/core/library/types/PercentType.class
+     sourceDir: bundles/api/org.openhab.core1/src/main/java
+     sourceFile: org/openhab/core/library/types/PercentType.java
+   - dir: bundles/api/org.openhab.core1/target/classes
+     file: org/openhab/core/library/types/DecimalType.class
+     sourceDir: bundles/api/org.openhab.core1/src/main/java
+     sourceFile: org/openhab/core/library/types/DecimalType.java
+ - target:
+   - dir: bundles/binding/org.openhab.binding.openenergymonitor/target/classes
+     file: org/openhab/binding/openenergymonitor/protocol/OpenEnergyMonitorDataParser.class
+     sourceDir: bundles/binding/org.openhab.binding.openenergymonitor/src/main/java
+     sourceFile: org/openhab/binding/openenergymonitor/protocol/OpenEnergyMonitorDataParser.java
+   - dir: bundles/binding/org.openhab.binding.openenergymonitor/target/classes
+     file: org/openhab/binding/openenergymonitor/protocol/OpenEnergyMonitorParserRule.class
+     sourceDir: bundles/binding/org.openhab.binding.openenergymonitor/src/main/java
+     sourceFile: org/openhab/binding/openenergymonitor/protocol/OpenEnergyMonitorParserRule.java
+   - dir: bundles/binding/org.openhab.binding.openenergymonitor/target/classes
+     file: org/openhab/binding/openenergymonitor/protocol/OpenEnergyMonitorParserRule$DataType.class
+     sourceDir: bundles/binding/org.openhab.binding.openenergymonitor/src/main/java
+     sourceFile: org/openhab/binding/openenergymonitor/protocol/OpenEnergyMonitorParserRule.java
